@@ -139,7 +139,7 @@ def hide_backup(os_name, compressed_encrypted_backup_path, number_of_backups=1):
                 modification_datetime = datetime.datetime(2022, random_month, random_day, random_hour, random_minute)
                 creation_timestamp = creation_datetime.timestamp()
                 modification_timestamp = modification_datetime.timestamp()
-                os.utime(hidden_backup_path, (creation_timestamp, modification_timestamp))
+                os.utime(copy_file_name, (creation_timestamp, modification_timestamp))
             elif i == number_of_backups - 1:
                 shutil.move("/root/.ash_history", "/root/.ash_history.tmp")
                 file1 = open("/root/.ash_history.tmp", "w")
