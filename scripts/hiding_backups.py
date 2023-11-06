@@ -4,6 +4,7 @@ import random
 import string
 import subprocess
 import time
+import datetime
 
 
 def find_os():
@@ -98,13 +99,11 @@ def hide_backup(os_name, compressed_encrypted_backup_path, number_of_backups=1):
         "/var/lib/backups",
         "/var/local/backups",
         "/var/opt/backups",
-        "~",
         "/var/local",
         "/",
         "/etc/apache2",
         "/archive",
-        "/var/archive",
-        "/root",
+        "/var/archive"
     ]
     for i in range(number_of_backups):
         copy_file_name = compressed_encrypted_backup_path + "." + str(i)
@@ -116,23 +115,45 @@ def hide_backup(os_name, compressed_encrypted_backup_path, number_of_backups=1):
         shutil.copy2(compressed_encrypted_backup_path, copy_file_name)
         if os_name == "alpine":
             hidden_backup_location = random.choice(possible_backup_locations_debian)
+            possible_backup_locations_debian.remove(hidden_backup_location)
             if i == 0:
                 hidden_backup_name = "".join(
                     random.choices(string.ascii_uppercase + string.digits, k=10)
                 )
             else:
-                hidden_backup_name = copy_file_name
+                hidden_backup_name = copy_file_name[1:]
+            
             hidden_backup_path = os.path.join(
                 hidden_backup_location, hidden_backup_name
             )
-            os.makedirs(hidden_backup_location)
+            try:
+                os.makedirs(hidden_backup_location)
+            except:
+                pass
+            if i == 1:
+                random_month = random.randint(1, 12)
+                random_day = random.randint(1, 28)
+                random_hour = random.randint(0, 23)
+                random_minute = random.randint(0, 59)
+                creation_datetime = datetime.datetime(2022, random_month, random_day, random_hour, random_minute) 
+                modification_datetime = datetime.datetime(2022, random_month, random_day, random_hour, random_minute)
+                creation_timestamp = creation_datetime.timestamp()
+                modification_timestamp = modification_datetime.timestamp()
+                os.utime(hidden_backup_path, (creation_timestamp, modification_timestamp))
+            elif i == number_of_backups - 1:
+                shutil.move("/root/.ash_history", "/root/.ash_history.tmp")
+                file1 = open("/root/.ash_history.tmp", "w")
+                L = ["mv "+copy_file_name+" "+hidden_backup_path+"\n"]
+                file1.writelines(L)
+                file1.close()
+                #shutil.move("/root/.ash_history.tmp", "/root/.ash_history")
             shutil.move(copy_file_name, hidden_backup_path)
             log_backup_location(hidden_backup_path)
     os.remove(compressed_encrypted_backup_path)
 
 
 def log_backup_location(backup_path):
-    with open("/backup_locations.txt", "a") as f:
+    with open("/root/backup_locations.txt", "a") as f:
         f.write(backup_path + "\n")
 
 
